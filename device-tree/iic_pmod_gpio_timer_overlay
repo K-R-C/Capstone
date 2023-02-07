@@ -37,7 +37,7 @@
 			axi_timer: timer@40002000 {
     				clock-frequency = <100000000>;
     				clocks = <&clkc 15>;
-				    clock-names = "s_axi_aclk";
+				clock-names = "s_axi_aclk";
     				compatible = "xlnx,xps-timer-1.00.a";
     				interrupt-parent = <&intc>;
     				interrupts = <0 30 4>;
