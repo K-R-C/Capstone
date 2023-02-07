@@ -1,0 +1,52 @@
+/dts-v1/;
+/plugin/;
+/ {
+	fragment@0 {
+		target = <&amba>;
+		// #address-cells = <1>;
+		// #size-cells = <1>;
+
+		__overlay__ {
+			#address-cells = <1>;
+			#size-cells = <1>;
+			
+			i2c@40000000 {
+				compatible = "xlnx,xps-iic-2.00.a";
+				interrupt-parent = <&intc>;
+				interrupt-names = "iic2intc_irpt";
+				interrupts = <0 29 4>;
+				clock-names = "s_axi_aclk";
+				clocks = <&clkc 15>;
+				reg = <0x40000000 0x200>;
+				#address-cells = <1>;
+				#size-cells = <0>;
+
+				pmod0@57 {
+					compatible = "renesas,isl29501";
+					reg = <0x57>;
+				};
+			};
+			
+			axi_gpio: gpio@40004000 {
+        			#gpio-cells = <2>;
+        			compatible = "xlnx,xps-gpio-1.00.a";
+        			gpio-controller ;
+        			reg = <0x40004000 0x200>;	
+			} ;
+			
+			axi_timer: timer@40002000 {
+    				clock-frequency = <100000000>;
+    				clocks = <&clkc 15>;
+				    clock-names = "s_axi_aclk";
+    				compatible = "xlnx,xps-timer-1.00.a";
+    				interrupt-parent = <&intc>;
+    				interrupts = <0 30 4>;
+    				reg = <0x40002000 0x200>;
+    				xlnx,count-width = <0x10>;
+    				xlnx,one-timer-only = <0x0>;
+    				#pwm-cells = <2>;
+			};
+			
+		};
+	};
+};
