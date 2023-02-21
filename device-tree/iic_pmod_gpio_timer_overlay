@@ -25,6 +25,11 @@
 					compatible = "renesas,isl29501";
 					reg = <0x57>;
 				};
+				
+				pmod0@56 {
+					compatible = "renesas,isl29501";
+					reg = <0x56>;
+				};
 			};
 			
 			axi_gpio: gpio@40004000 {
