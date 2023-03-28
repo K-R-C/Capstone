@@ -1,0 +1,264 @@
+// This program will plug the pmod readings into the pwm driver. 
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+struct regs {
+	volatile uint32_t rate;
+	volatile uint32_t scale;
+	volatile uint32_t samples;
+	volatile uint32_t status_control;
+};
+
+int main(void) {
+	int fd, ret = EXIT_FAILURE;
+	struct regs* ioregs;
+	volatile uint32_t* bram_2;
+
+	if((fd = open("/dev/audioctl0", O_RDWR)) < 0) {
+		perror("open()");
+		return EXIT_FAILURE;
+	}
+	
+	ioregs = (struct regs*)mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+
+	if(ioregs == MAP_FAILED) {
+		perror("mmap()");
+		goto err_mmap;
+	}
+	
+	printf(
+			"register dump"			"\n"
+			"--------------"		"\n"
+			"rate:\t\t%08x"			"\n"
+			"scale:\t\t%08x"		"\n"
+			"samples:\t%08x"		"\n"
+			"status:\t\t%08x"		"\n",
+			ioregs->rate, ioregs->scale, ioregs->samples, ioregs->status_control);  	//reading member values from struct using struct pointer ioregs
+			
+
+// Pmod data stram with theremin state behavior
+			
+	int flag=0;
+    	
+    	const int upperCutoff=7000;
+   	const int lowerCutoff=4000;
+   	
+   	ifstream pmodAmp;	//File stream for pmod1 representing amplitude (volume) values
+   	
+   	ifstream pmodFreq;	//File stream for pmod2 epresenting frequency (pitch) values
+   	
+   	ofstream logFile;	//used to display results of testing. 
+   	
+   	string ampStatus;	//used to display if readings are in range or not. Used for testing and writing log file. 
+   	string freqStatus;
+   	
+   	int temp; 		//temp value that will be used for log file output
+    	
+    	//logFile.open("/home/kchai/Desktop/pmodReadingFiles/logFile.txt",ios::trunc);
+    	
+    	
+    	
+    		 
+
+    while(true){	//true	
+    
+    	//stream in data from both pmods
+    	
+    	pmodAmp.open("/run/user/1000/gvfs/sftp:host=192.168.20.2/sys/bus/iio/devices/iio:device1/in_proximity_raw");
+	pmodAmp>>AMPLITUDE;
+	pmodAmp.close();
+
+    	pmodFreq.open("/run/user/1000/gvfs/sftp:host=192.168.20.2/sys/bus/iio/devices/iio:device2/in_proximity_raw");
+	pmodFreq>>Hz;
+	pmodFreq.close();
+    	
+ 	logFile.open("/home/kchai/Desktop/pmodReadingFiles/logFile.txt",ios::trunc);
+	
+
+	if ( (AMPLITUDE >= lowerCutoff && AMPLITUDE <= upperCutoff) && (Hz >= lowerCutoff && Hz <= upperCutoff) )		//if both pmod readings are in range
+	
+		{
+		
+			
+			
+			ampStatus= "in range";		//global values within this loops scope. 
+			freqStatus= "in range";
+		
+			//b.beep(9000 - Hz, duration);		//pass data to functions	i.e. do something with the data you're streaming in
+    			//b.wait();	
+    			
+    			ioregs -> scale = AMPLITUDE;
+    			ioregs -> rate = Hz;
+	
+			flag =1;				//signals that you have completed start up condition
+		}
+		
+	
+    	else if	( !(AMPLITUDE >= lowerCutoff && AMPLITUDE <= upperCutoff) && (Hz >= lowerCutoff && Hz <= upperCutoff) && flag==1)
+	
+		{
+			//if AMPLITUDE isn't in range but Hz is and you have already performed your startup procedure. 
+			
+			//limit AMPLITUDE to either upper or lower cutoff. Stream Hz values as usual 
+		
+		
+		
+			if ( AMPLITUDE < lowerCutoff)		// cap at lowerCutoff		NOTE: may not need <=, could just check for < at this point. originally <=
+			
+				{
+					
+					
+					temp=AMPLITUDE;
+
+					AMPLITUDE=lowerCutoff;		 //override current amplitude value read in from file with value of lowerCutoff
+									// current Hz value read in from file remains unchanged . Value of freqStatus remains unchanged. ******
+									
+					ampStatus="capped at  lower cutoff: amplitude before: " + to_string(temp) + " amplitude capped: "+ to_string(AMPLITUDE);			
+									
+					//b.beep(9000 - Hz, duration);
+    					//b.wait();
+    					
+    					ioregs -> scale = AMPLITUDE;
+    					ioregs -> rate = Hz;
+
+				}
+			
+
+		
+			else if (AMPLITUDE > upperCutoff)		//cap at upperCutoff		note: originally >= 
+				{	
+				
+					
+					temp=AMPLITUDE;
+
+					AMPLITUDE=upperCutoff;		//override current amplitude value read in from file with value of upperCutoff
+					
+					ampStatus="capped at  upper cutoff: amplitude before: "+to_string(temp)+" amplitude capped: "+to_string(AMPLITUDE);
+					
+					ioregs -> scale = AMPLITUDE;
+					ioregs -> rate = Hz;
+						
+					
+					
+					//b.beep(9000 - Hz, duration);
+    					//b.wait();	
+					
+				}
+	
+	
+	
+		}
+		
+	else if	( (AMPLITUDE >= lowerCutoff && AMPLITUDE <= upperCutoff) && !(Hz >= lowerCutoff && Hz <= upperCutoff) && flag==1)
+
+		{
+	
+			//if Hz ins't in range but AMPLITUDE is and you have already performed your startup procedure. 
+			
+			// limit Hz to either upper of lower cutoff. Stream AMPLITUDE values as usual
+			
+			
+
+			if ( Hz < lowerCutoff)	// cap at lowerCutoff
+				{	
+
+					temp=Hz;
+
+					Hz=lowerCutoff;
+
+					freqStatus="capped at  lower cutoff: Frequency before: "+to_string(temp)+" Frequency capped: "+to_string(Hz);
+		
+					
+					ioregs -> scale = AMPLITUDE;
+					ioregs -> rate = Hz;
+					
+								
+					//b.beep(9000 - Hz, duration);
+    					//b.wait();
+					
+				}
+			
+
+			else if (Hz > upperCutoff)	//cap at upperCutoff
+				{
+					
+					
+
+					temp=Hz;
+
+					Hz=upperCutoff;		
+
+					freqStatus="capped at  upper cutoff: Frequency before: "+to_string(temp)+" Frequency capped: "+to_string(Hz);
+					
+					ioregs -> scale = AMPLITUDE;
+					ioregs -> rate = Hz;
+					
+					
+					
+					//b.beep(9000 - Hz, duration);
+    					//b.wait();				
+					
+				}
+	
+	
+		}
+		
+	
+	else	{		//if neitherof the pmods are in range return to neutral starting condition
+	
+			
+			
+			// don't call sound creation function at all. Lack of sound creation function = lack of sound
+		
+
+			 ampStatus= " Idle";		//values carried over into next loop logic until they have a reason to change. Global values within this loop. 
+                        freqStatus= "Idle";
+			 
+			 //b.wait();
+			 //DO NOTHING DURING THIS STEP	
+
+			flag =0; 
+		
+			//do nothing until you detect starting procedure. 
+			
+			
+			//would I need to do something like this?
+			
+			//NOW WHAT I WANT TO DO IS CHANGE THE STATUS OF THE STATUS AND CONTROL BIT TO DISABLE IT THINGS
+			//THIS IS MY NEW "DO NOTHING" LOGIC
+			
+			
+	
+		}
+
+
+
+	cout<<"amplitude:  "<< AMPLITUDE <<"   "<< ampStatus<<" 		frequency:  "<< Hz<<"   "<<freqStatus<<endl;
+	logFile<<"amplitude:  "<< AMPLITUDE <<"   "<< ampStatus<<" 		frequency:  "<< Hz<<"   "<<freqStatus<<endl;
+	
+	logFile.close();
+
+    	
+    }
+
+	
+    	//logFile.close();
+
+
+	
+	ret = EXIT_SUCCESS;
+	
+err_ok:
+	munmap((void*)ioregs, 4096);
+err_mmap:
+	close(fd);
+	return ret;
+}
