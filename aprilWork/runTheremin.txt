@@ -1,0 +1,149 @@
+
+
+/*
+ This program will be the primary program that runs when the theremin starts up. It will determine which board is the sender and which board is the receiver. 
+ It will also launch other programs for collecting pmod data and sending out audio data. 
+ 
+*/
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <inttypes.h>
+
+#include <unistd.h>
+#include <sys/mman.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+
+
+#define DEFAULT_PLAY_SOUND "play_sound"
+#define DEFAULT_READ_DATA "read_pmod_data"
+
+void checkBoard(const char* play_sound_bin, const char* read_pmod_bin)
+{
+	// change path to eliminate the /run/user/1000/.../
+	// path should start on /sys/bus/.../.../
+	
+	// only one PMOD should be checked here
+	statReturnVal1 = stat("/sys/bus/iio/devices/iio:device1/in_proximity_raw");  //path for pmod1 "file"
+	//statReturnVal2 = stat("/sys/bus/iio/devices/iio:device2/in_proximity_raw");  //path for pmod2 "file" put this in the writepmod program
+	
+	if (statReturnVal1 == -1) // -1 is returned by the stat function if there is an error finding this file. 
+	{
+		const char* program;
+		//if this is the case, then this board is not the board with the pmods connected to it. It will be assumed that this board will be the receiving board then. 
+		//I am only checking for the presence of one pmod here, because our pmods are connected to each other. Assumed that they are a package deal. 
+		//IN THE FUTURE COULD ADD MORE ROBUST LOGIC TO DETERMINE IF ONE PMOD IS DETECTED AND THE OTHER ISN'T TO CHECK FOR ERRORS. 
+		
+		
+		//now initiate logic for receiving board. 
+		
+		//execv function call to getData program "file"
+		
+		
+		if(!read_pmod_bin) {
+			program = DEFAULT_PLAY_SOUND;
+		} else {
+			program = play_sound_bin;
+		}
+		char* const[] argv = { program , NULL };
+		execvp(program, argv);
+
+		
+		
+		
+	}
+	
+	if (statReturnVal1 == 0) 
+	{
+		// read data from pmod and send program
+		writeDataProgram= "read_data_program"// name of the play_sound program, don't need to provide a path if you store this somewhere in the system path like usr/bin or something
+		
+		// need argv array
+		char* const[] argv = { writeDataProgram, NULL };
+		execvp(writeDataProgram, argv);
+	}
+	
+	
+}	
+	
+	
+
+
+	//so if one of the pmods ARE detected, then double check to make sure the other one is there and connected as well. 
+	
+	
+	/*
+	
+	
+	if (statReturnVal1 == 0) && (statReturnVal2 == 0) // 0 is returned by stat function upon success. PUT THIS DETAILED LOGIC IN THE WRITE_PMOD PROGRAM
+	{
+		//at this point both pmods have been detected. This implies that this is the board what will collect pmod data and send it to the receiving board
+		
+		
+		writeDataProgram= "play_sound"// name of the play_sound program, don't need to provide a path if you store this somewhere in the system path like usr/bin or something
+		
+		// need argv array
+		char* const[] argv = { writeDataProgram, NULL };
+		execvp(writeDataProgram, argv);
+		
+	}
+	else
+	{
+		//there has been an issue, consider sending a message and ending the program
+	}
+	
+	
+	
+	
+	*/
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+
+
+
+
+
+
+
+
