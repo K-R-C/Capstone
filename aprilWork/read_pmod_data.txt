@@ -8,11 +8,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#define AMPLUTE_OFFSET		0
+#define FREQUENCY_OFFSET	1
+
 int main(void){
 
 int pmodAmp,pmodFreq;
 int fdAmp,fdFreq, ret = EXIT_FAILURE;
 int fd;	
+unsigned int values[2];
 
 if((fd = open("/dev/hssi", O_RDWR)) < 0) {	//used for streaming in hssi data
 		perror("open()");
@@ -23,7 +27,7 @@ ifstream pmodAmp;	//File stream for pmod1 representing amplitude (volume) values
    	
 ifstream pmodFreq;	//File stream for pmod2 epresenting frequency (pitch) values
 
- ofstream hssi("/dev/hssi", ios::binary);	
+ //ofstream hssi("/dev/hssi", ios::binary);	
 
 
 
@@ -52,18 +56,18 @@ if((fdFreq = open("/sys/bus/iio/devices/iio:device2/in_proximity_raw", O_RDONLY)
 
 while(true) 
 {
-     	pmodAmp.open("/run/user/1000/gvfs/sftp:host=192.168.20.2/sys/bus/iio/devices/iio:device1/in_proximity_raw");
-	pmodAmp>>AMPLITUDE;
+     	pmodAmp.open("/sys/bus/iio/devices/iio:device1/in_proximity_raw");
+	pmodAmp>>values[AMPLITUDE_OFFSET];
 	pmodAmp.close();
 	
-	pmodFreq.open("/run/user/1000/gvfs/sftp:host=192.168.20.2/sys/bus/iio/devices/iio:device2/in_proximity_raw");
-	pmodFreq>>Hz;
+	pmodFreq.open("/sys/bus/iio/devices/iio:device2/in_proximity_raw");
+	pmodFreq>>values[FREQUENCTY_OFFSET];
 	pmodFreq.close();
 	
-    		
+ 	write(fd, values, sizeof(values));   		
     
-    	hssi << AMPLITUDE << Hz;
-    	hssi.flush();
+    	//hssi << AMPLITUDE << Hz;
+    	//hssi.flush();
     
     
    

@@ -24,6 +24,9 @@
 #define STATUS_CONTROL_ENABLE_OFFSET	(1)
 #define STATUS_CONTROL_ENABLE_MASK		(1 << (1))
 
+#define AMPLUTE_OFFSET		0
+#define FREQUENCY_OFFSET	1
+
 using namespace std; 
 
 
@@ -152,8 +155,8 @@ int main(void) {
         /* print the values */
         //printf("%u %u\n", values[0], values[1]);
         
-        AMPLITUDE=values[0];		//need to confirm order
-        Hz=values[1];
+        AMPLITUDE=values[AMPLITUDE_OFFSET];		//need to confirm order
+        Hz=values[FREQUENCY_OFFSET];
       //}
 
 
