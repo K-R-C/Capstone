@@ -1,7 +1,0 @@
-PWM IOCTL TEST INSTRUCTIONS
-***************************
-
-When running a 'set_*' functions, be sure to pass a '--value' to the command line.
-	Ex:	./set_rate --value 100
-	
-A 'get_*' funciton will print the value of the register in hexadecimal to the screen. 
