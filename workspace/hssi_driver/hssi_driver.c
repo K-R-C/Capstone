@@ -23,8 +23,8 @@
 // Macros for TX and RX reset/enable
 #define TRANSMIT_RESET		(1 << (0))
 #define TRANSMIT_ENABLE		(1 << (1))
-#define RECEIVE_RESET		(1 << (16))
-#define RECEIVE_ENABLE		(1 << (17))
+#define RECEIVE_RESET		(1 << (3))
+#define RECEIVE_ENABLE		(1 << (4))
 
 // TX and RX Working queue size
 #define FIFO_SIZE 4096/4;
@@ -61,7 +61,7 @@ void hssi_tx_thread(void* data) {
 	while(true) {
 		while(!kfifo_is_empty(&data->tx_fifo)) {
 			kfifo_get(&data->tx_fifo, &data_to_send);
-			while(!(data->regs->csr & (1 << 6))) { /* Probe the TX Ready bit until it is set */
+			while(!(data->regs->csr & (1 << 19))) { /* Probe the TX Ready bit until it is set */
 				usleep_range(100, 200);	/* Yield CPU to other tasks for minimum 100us, maximum 200us */
 			}
 			/* When ready to transmit, store data_to_send in the TX reg and start transmission */
@@ -79,7 +79,7 @@ void hssi_rx_thread(void* data) {
 	while(true) {
 		while (!(kfifo_is_full(&data->rx_fifo)) {
 			kfifo_put(&data->rx_fifo, &data_to_receive);
-			while(!(data->regs->csr & (1 << 18))) { /* Probe the RX_Data_Valid bit until it is set */
+			while(!(data->regs->csr & (1 << 20))) { /* Probe the RX_Data_Valid bit until it is set */
 				usleep_range(100, 200);	/* Yield CPU to other tasks for minimum 100us, maximum 200us */
 			}
 			data->regs->rx_data = data_to_receive;
