@@ -19,7 +19,7 @@ struct mmregs {
 
 int main(void) {
 	// static const unsigned int msg[] = {0xaaaaaaaa, 0x55555555, 0xcccccccc, 0x33333333};
-	static const unsigned int msg[] = {0xfe919e49, 0x505ba6f6, 0x6bc03baf, 0x7abd5bad};
+	static const unsigned int msg[] = {0xfe919e49, 0x505ba6f6, 0x6bc03baf, 0x7abd5bad};	//message to be sent 
 	size_t msg_index = 0, trial_count = 0;
 	unsigned int rx_data;
 	int fd, ret = EXIT_FAILURE;
@@ -37,7 +37,11 @@ int main(void) {
 		goto err_mmap;
 	}
 
-/* set then clear the reset bit */
+/* 
+ * The below commented portions were debugging steps to ensure that 
+ * the transmition Finite State Machine was progressing as it should.
+ * 
+ * set then clear the reset bit */
 	//regs->csr |= (1 << 3);
 	
 /*
@@ -59,31 +63,35 @@ int main(void) {
 	}
 	fprintf(stderr, "TX Done bit is: %08x\n", regs->csr &= (1 << 16));
 */
-regs->csr &= ~(1 << 0);
-regs->csr &= ~(1 << 1);
-regs->csr &= ~(1 << 2);
-regs->csr &= ~(1 << 3);
-regs->csr &= ~(1 << 4);
-regs->csr &= ~(1 << 5);
-regs->csr &= ~(1 << 6);
+
+
+	// clear all writable bits before running test
+	regs->csr &= ~(1 << 0);
+	regs->csr &= ~(1 << 1);
+	regs->csr &= ~(1 << 2);
+	regs->csr &= ~(1 << 3);
+	regs->csr &= ~(1 << 4);
+	regs->csr &= ~(1 << 5);
+	regs->csr &= ~(1 << 6);
+	
 	while(!(regs->csr & (1 << 22))) { // check for clocks to settle
 		;
 	}
-	//fprintf(stderr, "clock locked\n");
+	fprintf(stderr, "clock locked\n");
 	regs->csr |= (1 << 1);		//TX Enable
 	regs->csr |= (1 << 4); 		//RX Enable
 			
 	regs->csr |= (1 << 6);	// clear RX
 	regs->csr &= ~(1 << 6);
-	//fprintf(stderr, "TX Enabled\n");
+	fprintf(stderr, "TX Enabled\n");
 
-	while(1) {
+	while(1) {	//infinite loop to continuously send and receive new messages
 		
 		trial_count ++;
 		while(!(regs->csr & (1 << 19))) {
 			/* wait for transmitter*/ ;
 		}
-		//fprintf(stderr, "TX Ready\n");
+		fprintf(stderr, "TX Ready\n");
 		regs->tx_data = msg[msg_index]; /* message to send */
 		
 		while(!(regs->csr & (1 << 23))) {
@@ -93,7 +101,7 @@ regs->csr &= ~(1 << 6);
 		while(!(regs->csr & (1 << 16))) {
 			; //wait for TX Done
 		}
-		//fprintf(stderr, "TX Done\n");
+		fprintf(stderr, "TX Done\n");
 		regs->csr &= ~(1 << 2);
 
 		while(!(regs->csr & (1 << 20))) {
@@ -109,7 +117,7 @@ regs->csr &= ~(1 << 6);
 		}
 		msg_index++;
 		msg_index %= (sizeof(msg)/sizeof(msg[0]));	
-		//fprintf(stderr, "sent %08x\n", msg[msg_index]);
+		fprintf(stderr, "sent %08x\n", msg[msg_index]);
 	}
 
 	munmap((void*)regs, 4096);
