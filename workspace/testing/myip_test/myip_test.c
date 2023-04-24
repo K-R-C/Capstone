@@ -8,8 +8,8 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#define I2C_OFFSET 0x40008000U
-struct i2c_regs {
+#define MYIP_OFFSET 0x40008000U
+struct myip_regs {
 	volatile uint32_t samples;
 	volatile uint32_t rate;
 	volatile uint32_t scale;
@@ -18,14 +18,14 @@ struct i2c_regs {
 
 int main(void) {
 	int fd, ret = EXIT_FAILURE;
-	struct i2c_regs* regs;
+	struct myip_regs* regs;
 
 	if((fd = open("/dev/mem", O_RDWR)) < 0) {
 		perror("open()");
 		return EXIT_FAILURE;
 	}
 
-	regs = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, I2C_OFFSET);
+	regs = mmap(NULL, 4096, PROT_READ | PROT_WRITE, MAP_SHARED, fd, MYIP_OFFSET);
 
 	if(regs == MAP_FAILED) {
 		perror("mmap()");
