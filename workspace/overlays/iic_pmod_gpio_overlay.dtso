@@ -37,7 +37,28 @@
         			compatible = "xlnx,xps-gpio-1.00.a";
         			gpio-controller ;
         			reg = <0x40004000 0x200>;
-			} ;
+			};
+			leds {
+				compatible = "gpio-leds";
+				led0 {
+					gpios = <&axi_gpio 0 GPIO_ACTIVE_HIGH>;
+					default-state = "off";
+				};
+
+				led1 {
+					gpios = <&axi_gpio 1 GPIO_ACTIVE_HIGH>;
+					default-state = "off";
+				};
+				led2 {
+					gpios = <&axi_gpio 2 GPIO_ACTIVE_HIGH>;
+					default-state = "off";
+				};
+
+				led3 {
+					gpios = <&axi_gpio 3 GPIO_ACTIVE_HIGH>;
+					default-state = "off";
+				};
+			};
 			
 			pwm_audio: pwm@42000000 {
 					compatible = "capstone,pwm_driver";
